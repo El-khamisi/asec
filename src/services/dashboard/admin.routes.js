@@ -1,13 +1,13 @@
 const router = require('express').Router();
 
-const { authN } = require('../../middelwares/authN');
-const { isAdmin } = require('../../middelwares/authZ');
+const { authN } = require('../../middlewares/authN');
+const { isAdmin } = require('../../middlewares/authZ');
 const { imageUpload } = require('../../config/multer');
 const { getUsers, getUser, addUser, updateUser, deleteUser } = require('../user/user.controllers');
 const { addCourse, updateCourse, deleteCourse } = require('../course/course.controllers');
 const { addLesson, updateLesson, deleteLesson } = require('../lesson/lesson.controllers');
 const { addQuiz, updateQuiz, deleteQuiz, adminGetQuiz } = require('../quiz/quiz.controllers');
-const { addReading, updateReading, deleteReading } = require('../reading/reading.controllers');
+// const { addReading, updateReading, deleteReading } = require('../reading/reading.controllers');
 
 //Users
 router.get('/users', authN, isAdmin, getUsers);
@@ -17,7 +17,8 @@ router.put('/user/:id', authN, isAdmin, imageUpload.single('photo'), updateUser)
 router.delete('/user/:id', authN, isAdmin, deleteUser);
 
 //Courses
-router.post('/course', authN, isAdmin, imageUpload.single('photo'), addCourse);
+// router.post('/course', authN, isAdmin, addCourse);
+router.post('/course', addCourse);
 router.put('/course/:id', authN, isAdmin, imageUpload.single('photo'), updateCourse);
 router.delete('/course/:id', authN, isAdmin, deleteCourse);
 
@@ -32,9 +33,9 @@ router.post('/quiz', authN, isAdmin, addQuiz);
 router.put('/quiz/:id', authN, isAdmin, updateQuiz);
 router.delete('/quiz/:id', authN, isAdmin, deleteQuiz);
 
-//Reading
-router.post('/read', authN, isAdmin, addReading);
-router.put('/read/:id', authN, isAdmin, updateReading);
-router.delete('/read/:id', authN, isAdmin, deleteReading);
+// //Reading
+// router.post('/read', authN, isAdmin, addReading);
+// router.put('/read/:id', authN, isAdmin, updateReading);
+// router.delete('/read/:id', authN, isAdmin, deleteReading);
 
 module.exports = router;

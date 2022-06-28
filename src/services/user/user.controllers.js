@@ -4,7 +4,7 @@ const { successfulRes, failedRes } = require('../../utils/response');
 const { upload_image } = require('../../config/cloudinary');
 const { plansNames } = require('../plans/plans.model');
 const { subscribe } = require('../../utils/subscribe');
-const { premiumPlan, freePlan } = require('../../config/membership');
+// const { premiumPlan, freePlan } = require('../../config/membership');
 
 exports.verify = (req, res) => {
   successfulRes(res, 200, { token: res.locals.user });

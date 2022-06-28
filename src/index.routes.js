@@ -1,7 +1,6 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const MongoStore = require('connect-mongo');
-const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const session = require('express-session');
 const morgan = require('morgan');
@@ -9,7 +8,8 @@ const multer = require('multer');
 const { TOKENKEY, DBURI, DBURI_remote, NODE_ENV } = require('./config/env');
 
 const login = require('./services/login/login.routes');
-const plans = require('./services/plans/plans.routes');
+const dashboard = require('./services/dashboard/index.routes');
+const course = require('./services/course/course.routes');
 
 const { initPlans } = require('./services/plans/plans.model');
 
@@ -43,12 +43,14 @@ module.exports = async (app) => {
   initPlans();
 
   // Middlewares
-  app.use(
-    cors({
-      origin: ['http://localhost:3000', 'https://textgenuss.net'],
-      credentials: true,
-    })
-  );
+  app.use((req, res, next) => {
+    const origin = req.headers.origin;
+    res.set('Access-Control-Allow-Origin', origin);
+    res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
+    res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.set('Access-Control-Allow-Credentials', true);
+    return next();
+  });
 
   app.use(
     session({
@@ -82,12 +84,10 @@ module.exports = async (app) => {
       }
     };
   };
-  app.use(unless(['/admin/course/*', '/admin/user/*', '/myprofile'], multer().none()));
+  // app.use(unless(['/admin/course/*', '/admin/user/*', '/myprofile'], multer().none()));
 
   //Routers
   app.use(login);
-
-  app.use(membership);
-  app.use(role);
-  app.use(plans);
+  app.use(dashboard);
+  app.use(course);
 };

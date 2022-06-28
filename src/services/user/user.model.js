@@ -5,8 +5,7 @@ const validator = require('validator');
 //configuration
 const { TOKENKEY, NODE_ENV } = require('../../config/env');
 const roles = require('../../config/roles');
-const membership = require('../../config/membership');
-const { plansNames } = require('../plans/plans.model');
+
 
 const userSchema = new mongoose.Schema(
   {
@@ -16,9 +15,14 @@ const userSchema = new mongoose.Schema(
     phone: { type: String },
     password: { type: String, required: [true, 'Password is required'] },
     isVerified: { type: Boolean, default: false },
+    //
     role: { type: String, enum: [...Object.values(roles), 'Invalid role title'], default: roles.Student },
-    membership: { type: String, enum: [...Object.values(membership), 'Invalid membership plan'], default: membership.freePlan },
-    memberplan: { type: String, enum: [...Object.values(plansNames), 'Invalid memberplan name'], default: plansNames.None },
+    about: { type: String, trim: true },
+    rating: {
+      _id: false,
+      total_rate: { type: Number, default: 0 },
+      avg_rate: { type: Number, set: (v) => Math.round(v * 10) / 10, default: 0.0 },
+    },
     end_of_membership: { type: Date },
     inprogress: [
       { course: { type: mongoose.Schema.Types.ObjectId, ref: 'Course' }, quizzes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Quiz' }] },
@@ -46,15 +50,14 @@ userSchema.methods.generateToken = function (req, res) {
       email: this.email,
       photo: this.photo,
       role: this.role,
-      membership: this.membership,
     },
     TOKENKEY,
-    { expiresIn: '24h' }
+    { expiresIn: '7d' }
   );
 
   // req.session.user = this;
   res.cookie('authorization', token, {
-    maxAge: 24 * 60 * 60 * 1000, //24 Hours OR Oneday
+    maxAge: 7 * 24 * 60 * 60 * 1000, //7 days OR ONE WEEK
     sameSite: NODE_ENV == 'dev' ? false : 'none',
     secure: NODE_ENV == 'dev' ? false : true,
   });

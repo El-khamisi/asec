@@ -17,9 +17,9 @@ const imageStorage = multer.diskStorage({
   },
 });
 
-const videoStorage = multer.diskStorage({
+const fileStorage = multer.diskStorage({
   destination: function (req, file, cb) {
-    const tmpPath = path.join('tmp', 'videos');
+    const tmpPath = path.join('tmp', 'files');
 
     if (!fs.existsSync(tmpPath)) {
       fs.mkdirSync(tmpPath, { recursive: true });
@@ -33,9 +33,9 @@ const videoStorage = multer.diskStorage({
 });
 
 const imageUpload = multer({ storage: imageStorage });
-const videoUpload = multer({ storage: videoStorage });
+const fileUpload = multer({ storage: fileStorage });
 
 module.exports = {
   imageUpload,
-  videoUpload,
+  fileUpload,
 };

@@ -7,6 +7,4 @@ const lessonSchema = new mongoose.Schema({
   course_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Course' },
 });
 
-
-
 module.exports = mongoose.model('Lesson', lessonSchema);

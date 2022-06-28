@@ -1,6 +1,6 @@
 const router = require('express').Router();
 
-const { authN } = require('../../middelwares/authN');
+const { authN } = require('../../middlewares/authN');
 const { getQuiz, getQuizzes } = require('./quiz.controllers');
 
 router.get('/quizzes', authN, getQuizzes);

@@ -1,18 +1,23 @@
 const Course = require('./course.model');
 const { successfulRes, failedRes } = require('../../utils/response');
 const { upload_image } = require('../../config/cloudinary');
+const User = require('../user/user.model');
 
 exports.getCourses = async (req, res) => {
   try {
+    let { filter = 'title', value = '.*', limit = 16, skip = 0 } = req.query;
+
     let response = await Course.aggregate([
+      {
+        $match: { filter: { $regex: value, $options: 'six' } },
+      },
       {
         $sort: { createdAt: -1 },
       },
+      { $skip: skip },
+      { $limit: limit },
       {
-        $unset: ['description', 'quizzes', 'lessons'],
-      },
-      {
-        $group: { _id: '$level', courses: { $push: '$$ROOT' } },
+        $project: { title: 1, thumb: 1, instructor: 1, description: 1, price: 1, rating: 1, membership: 1, level: 1, category: 1 },
       },
     ]);
 
@@ -25,10 +30,12 @@ exports.getCourses = async (req, res) => {
 exports.getCourse = async (req, res) => {
   try {
     const _id = req.params.id;
-    let response = await Course.findById(_id).exec();
+    let response = await Course.findById(_id).select('-is_deleted')
+    .populate({ path: 'instructor._id', select: 'first_name last_name email photo'})
+    .populate({ path: 'lessons', select: 'name' });
 
-    response = await response.populate({ path: 'instructor', select: 'first_name last_name email photo' });
-    response = await response.populate({ path: 'lessons', select: 'name' });
+    response._doc.instructor = response._doc.instructor._id;
+    response.price = response.price.egp;
 
     return successfulRes(res, 200, response);
   } catch (e) {
@@ -38,29 +45,31 @@ exports.getCourse = async (req, res) => {
 
 exports.addCourse = async (req, res) => {
   try {
-    const { name, price, instructor, text, list, membership, level, quizzes } = req.body;
-    const photo = req.file?.path;
+    const { title, thumb,  instructor, description_text, description_list, 
+      price_usd, price_egp, membership, level, category, project, spec, } = req.body;
 
     const saved = new Course({
-      name,
-      price,
-      instructor,
+      title,
+      thumb,
+      instructor:{
+        _id: instructor,
+        name: await User.findById(instructor).select('first_name last_name').then(user => `${user.first_name} ${user.last_name}`),
+      },
       description: {
-        text: text,
-        list: list,
+        text: description_text,
+        list: description_list,
+      },price: {
+        usd: price_usd
       },
       membership,
-      photo,
       level,
-      quizzes,
+      category,
+      project,
+      spec
     });
-
-    if (photo) {
-      saved.photo = await upload_image(photo, saved._id, 'courses_thumbs');
-    }
     await saved.save();
 
-    return successfulRes(res, 201, saved);
+    return successfulRes(res, 201, saved.toJSON({virtuals: true}));
   } catch (e) {
     return failedRes(res, 500, e);
   }

@@ -1,5 +1,4 @@
 const { Admin, Student, Instructor } = require('../config/roles');
-const { premiumPlan } = require('../config/membership');
 const { failedRes } = require('../utils/response');
 
 exports.isAdmin = (req, res, next) => {
@@ -30,7 +29,7 @@ exports.isPremium = async (req, res, next) => {
     const membership = res.locals.user.membership;
     if (role && role == Admin) return next();
 
-    if (membership && membership == premiumPlan) return next();
+    // if (membership && membership == premiumPlan) return next();
 
     throw new Error('You do NOT have a premium plan subscription');
   } catch (e) {

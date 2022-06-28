@@ -9,16 +9,41 @@ cloudinary.config({
   api_secret: cloudinary_api_secret,
 });
 
+exports.upload_raw = async (rawPath, rawName, tag) => {
+  const file = await cloudinary.uploader.upload(
+    rawPath,
+    {
+      resource_type: 'raw',
+      public_id: `shuhyb/assets/${tag}/${rawName}`,
+      overwrite: true,
+      tags: `${tag}`,
+    },
+    function (err, result) {
+      if (err) {
+        console.log(err);
+        return err;
+      }
+    }
+  );
+  if (fs.existsSync(rawPath)) {
+    fs.rmSync(rawPath);
+  }
+  return file.url;
+};
+
 exports.upload_image = async (imagePath, imageName, tag) => {
   const img = await cloudinary.uploader.upload(
     imagePath,
     {
-      public_id: `assets/${tag}/${imageName}`,
+      public_id: `shuhyb/assets/${tag}/${imageName}`,
       overwrite: true,
       tags: `${tag}`,
     },
     function (err, image) {
-      if (err) throw new Error('An error has been occurred when uploading a photo');
+      if (err) {
+        console.log(err);
+        return err;
+      }
     }
   );
   if (fs.existsSync(imagePath)) {

@@ -1,6 +1,6 @@
 const router = require('express').Router();
 
-const { authN } = require('../../middelwares/authN');
+const { authN } = require('../../middlewares/authN');
 const { imageUpload } = require('../../config/multer');
 const { profileView, profileUpdate, profileDelete, enroll, sendMail } = require('./profile.controller');
 const { payment, paymentcb } = require('./payment.controller');

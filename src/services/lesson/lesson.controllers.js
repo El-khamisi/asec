@@ -1,7 +1,7 @@
 const Course = require('../course/course.model');
 const Lesson = require('./lesson.model');
 const { successfulRes, failedRes } = require('../../utils/response');
-const { premiumPlan } = require('../../config/membership');
+// const { premiumPlan } = require('../../config/membership');
 const { Instructor } = require('../../config/roles');
 const User = require('../user/user.model');
 

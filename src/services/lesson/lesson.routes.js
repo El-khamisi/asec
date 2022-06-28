@@ -1,6 +1,6 @@
 const router = require('express').Router();
 
-const { authN } = require('../../middelwares/authN');
+const { authN } = require('../../middlewares/authN');
 const { getLesson } = require('./lesson.controllers');
 
 router.get('/lesson/:lesson_id/course/:course_id', authN, getLesson);

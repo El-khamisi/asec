@@ -1,7 +1,7 @@
 const router = require('express').Router();
 
-const { authN } = require('../../middelwares/authN');
-const { isAdmin } = require('../../middelwares/authZ');
+const { authN } = require('../../middlewares/authN');
+const { isAdmin } = require('../../middlewares/authZ');
 const { getPlans, editPlans } = require('./plans.controller');
 
 router.get('/plans', getPlans);
