@@ -1,24 +1,39 @@
 const Course = require('./course.model');
-const { successfulRes, failedRes } = require('../../utils/response');
-const { upload_image } = require('../../config/cloudinary');
 const User = require('../user/user.model');
+const { successfulRes, failedRes } = require('../../utils/response');
 
 exports.getCourses = async (req, res) => {
   try {
-    let { filter = 'title', value = '.*', limit = 16, skip = 0 } = req.query;
+    let { filter = 'title', value = '', page=1 } = req.query;
 
+    const skip = (page - 1) * 16;
+    value = value ? { [filter]: { $regex: value, $options: 'six' }, is_deleted: false } : { is_deleted: false };
     let response = await Course.aggregate([
       {
-        $match: { filter: { $regex: value, $options: 'six' } },
+        $match: value,
       },
       {
         $sort: { createdAt: -1 },
       },
-      { $skip: skip },
-      { $limit: limit },
       {
-        $project: { title: 1, thumb: 1, instructor: 1, description: 1, price: 1, rating: 1, membership: 1, level: 1, category: 1 },
+        $project: {
+          title: 1,
+          thumb: 1,
+          instructor: 1,
+          description: 'description.text',
+          price_egp: '$price.egp',
+          rating: 1,
+          membership: 1,
+          level: 1,
+          category: 1,
+        },
       },
+      {
+        $facet:{
+          "current_data": [{ $skip: skip },{ $limit: 16 },],
+          "page_info": [{ $count:"total_pages" }, {$addFields: { "page": page }},],
+        }
+      }
     ]);
 
     return successfulRes(res, 200, response);
@@ -30,12 +45,18 @@ exports.getCourses = async (req, res) => {
 exports.getCourse = async (req, res) => {
   try {
     const _id = req.params.id;
-    let response = await Course.findById(_id).select('-is_deleted')
-    .populate({ path: 'instructor._id', select: 'first_name last_name email photo'})
-    .populate({ path: 'lessons', select: 'name' });
+    let response = await Course.findOne({ _id, is_deleted: false })
+      .select('-is_deleted -__v')
+      .populate({ path: 'instructor._id', select: 'first_name last_name email photo' })
+      .populate({ path: 'lessons', select: 'title' });
 
-    response._doc.instructor = response._doc.instructor._id;
-    response.price = response.price.egp;
+    if (response) {
+      response._doc.lessons = response.lessons;
+      response._doc.lessons_count = response.lessons.length;
+      response._doc.instructor = response.instructor._id;
+      response._doc.price_egp = response._doc.price.egp;
+      delete response._doc.price;
+    }
 
     return successfulRes(res, 200, response);
   } catch (e) {
@@ -45,31 +66,34 @@ exports.getCourse = async (req, res) => {
 
 exports.addCourse = async (req, res) => {
   try {
-    const { title, thumb,  instructor, description_text, description_list, 
-      price_usd, price_egp, membership, level, category, project, spec, } = req.body;
+    const { title, thumb, instructor, description_text, description_list, price_usd, price_egp, membership, level, category, project, spec } =
+      req.body;
 
     const saved = new Course({
       title,
       thumb,
-      instructor:{
+      instructor: {
         _id: instructor,
-        name: await User.findById(instructor).select('first_name last_name').then(user => `${user.first_name} ${user.last_name}`),
+        name: await User.findById(instructor)
+          .select('first_name last_name')
+          .then((user) => `${user.first_name} ${user.last_name}`),
       },
       description: {
         text: description_text,
         list: description_list,
-      },price: {
-        usd: price_usd
+      },
+      price: {
+        usd: price_usd,
       },
       membership,
       level,
       category,
       project,
-      spec
+      spec,
     });
     await saved.save();
 
-    return successfulRes(res, 201, saved.toJSON({virtuals: true}));
+    return successfulRes(res, 201, saved.toJSON({ virtuals: true }));
   } catch (e) {
     return failedRes(res, 500, e);
   }
@@ -93,11 +117,6 @@ exports.updateCourse = async (req, res) => {
       list: list ? list : doc.description.list,
     };
     doc.quizzes = quizzes ? quizzes : doc.quizzes;
-
-    if (photo) {
-      doc.photo = await upload_image(photo, doc._id, 'courses_thumbs');
-    }
-
     await doc.save();
 
     return successfulRes(res, 200, doc);
@@ -110,7 +129,7 @@ exports.deleteCourse = async (req, res) => {
   try {
     const _id = req.params.id;
 
-    const response = await Course.findByIdAndDelete(_id).exec();
+    const response = await Course.findByIdAndUpdate(_id, { is_deleted: true }).exec();
 
     return successfulRes(res, 200, response);
   } catch (e) {

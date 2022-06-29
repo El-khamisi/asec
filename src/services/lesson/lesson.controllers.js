@@ -37,23 +37,23 @@ OR there is no such lesson with ID-${lesson_id}`);
 exports.addLesson = async (req, res) => {
   try {
     const course_id = req.params.course_id;
-    const { data } = req.body;
+    const { lessons } = req.body;
 
     const course = await Course.findById(course_id).exec();
     if (!course) throw new Error(`Can NOT find a Course with ID-${course_id}`);
 
-    let response = [];
-    data.forEach(async (e) => {
+    let lessonsAdded = 0;
+    lessons.forEach(async (e) => {
       const saved = new Lesson({
-        name: e.name,
-        video: e.youtube_url,
-        course: course_id,
+        title: e.title,
+        video_url: e.video_url,
+        course_id: course_id,
       });
-      response.push(saved);
+      lessonsAdded++;
       await saved.save();
-      course.lessons.push(saved._id);
     });
 
+    let response = `Number of lessons has been added: ${lessonsAdded}`;
     await course.save();
     return successfulRes(res, 201, response);
   } catch (e) {

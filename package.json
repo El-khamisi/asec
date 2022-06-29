@@ -7,7 +7,8 @@
     "prettier": "prettier --config .prettierrc 'src/**/*.js'  --write",
     "dev": "nodemon index.js 5050",
     "prod": " NODE_ENV=prod node index.js 8080",
-    "start": "node index.js"
+    "start": "node index.js",
+    "jasmine": "npx jasmine"
   },
   "keywords": [],
   "author": "",
@@ -29,6 +30,7 @@
     "validator": "^13.7.0"
   },
   "devDependencies": {
-    "prettier": "^2.6.2"
+    "prettier": "^2.6.2",
+    "supertest": "^6.2.3"
   }
 }

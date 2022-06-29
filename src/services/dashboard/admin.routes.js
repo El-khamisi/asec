@@ -18,14 +18,14 @@ router.delete('/user/:id', authN, isAdmin, deleteUser);
 
 //Courses
 // router.post('/course', authN, isAdmin, addCourse);
-router.post('/course', addCourse);
-router.put('/course/:id', authN, isAdmin, imageUpload.single('photo'), updateCourse);
-router.delete('/course/:id', authN, isAdmin, deleteCourse);
+router.post('/courses', addCourse);
+router.put('/courses/:id', authN, isAdmin, imageUpload.single('photo'), updateCourse);
+router.delete('/courses/:id', authN, isAdmin, deleteCourse);
 
 //Lessons
-router.post('/lesson/:course_id', authN, isAdmin, addLesson);
-router.put('/lesson/:id/course/:course_id', authN, isAdmin, updateLesson);
-router.delete('/lesson/:id/course/:course_id', authN, isAdmin, deleteLesson);
+router.post('/lessons/:course_id', addLesson);
+router.put('/lessons/:id/course/:course_id', authN, isAdmin, updateLesson);
+router.delete('/lessons/:id/course/:course_id', authN, isAdmin, deleteLesson);
 
 //Quizzes
 router.get('/quiz/:id', authN, isAdmin, adminGetQuiz);

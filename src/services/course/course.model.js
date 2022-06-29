@@ -3,9 +3,9 @@ const { levels, membership, categories } = require('../../config/puplic_config')
 
 const courseSchema = new mongoose.Schema(
   {
-    title: { type: String, trim: true },
+    title: { type: String, trim: true, required: true },
     thumb: { type: String },
-    instructor: { _id: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, name: { type: String, trim: true } },
+    instructor: { _id: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }, name: { type: String, trim: true } },
     description: {
       _id: false,
       text: { type: String, trim: true },
@@ -49,12 +49,5 @@ courseSchema.virtual('reviews', {
   ref: 'Review',
   localField: '_id',
   foreignField: 'course_id',
-});
-
-courseSchema.virtual('reviews_count', {
-  ref: 'Review',
-  localField: '_id',
-  foreignField: 'course_id',
-  count: true,
 });
 module.exports = mongoose.model('Course', courseSchema);

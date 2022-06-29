@@ -30,7 +30,8 @@ const subscriptions = [
 
 const membership = ['free', 'paid'];
 
-const categories = ['BIM', 'BEM', 'RD'];
+const categories = ['BIM', 'BEM', 'RD', 'RD'];
+
 module.exports = {
   subscriptions,
   levels,

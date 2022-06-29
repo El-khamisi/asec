@@ -1,16 +1,16 @@
-const successfulRes = (res, code, data, status = 'success') => {
-  return res.status(code).json({
-    code: code,
+const successfulRes = (res, status, data, msg = 'success') => {
+  return res.status(status).json({
     status: status,
-    msg: data,
+    msg: msg,
+    data: data,
   });
 };
 
-const failedRes = (res, code, error = null, status = 'error') => {
-  return res.status(code).json({
-    code: code,
+const failedRes = (res, status, error = null, msg = 'error') => {
+  return res.status(status).json({
     status: status,
-    msg: error?.message,
+    msg: msg,
+    data: error?.message,
   });
 };
 

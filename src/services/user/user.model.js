@@ -6,10 +6,9 @@ const validator = require('validator');
 const { TOKENKEY, NODE_ENV } = require('../../config/env');
 const roles = require('../../config/roles');
 
-
 const userSchema = new mongoose.Schema(
   {
-    first_name: { type: String, trim: true },
+    first_name: { type: String, trim: true, required: true },
     last_name: { type: String, trim: true },
     email: { type: String, trim: true, required: [true, 'Email is required'], unique: true, validate: [validator.isEmail, 'Invalid Email'] },
     phone: { type: String },
