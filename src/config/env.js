@@ -23,4 +23,7 @@ module.exports = {
   server_domain: process.env.server_domain,
 
   exchange_api: process.env.exchange_api,
+
+  GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
+  GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
 };

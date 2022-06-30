@@ -11,7 +11,7 @@ const plansSchema = new mongoose.Schema({
   name: {
     type: String,
     trim: true,
-    enum: [...Object.values(plansNames), 'Invalid Plan Name'],
+    enum: Object.values(plansNames),
     required: [true, 'Name of plane is required'],
     unique: true,
   },

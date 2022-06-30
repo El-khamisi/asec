@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 const reviewSchema = new mongoose.Schema({
   content_id: { type: mongoose.Schema.Types.ObjectId, required: true },
-  content_type: { type: String, trim: true, required: true },
+  content_type: { type: String, enum: ['courses', 'counsulting'], trim: true, required: true },
   user_id: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   user_name: { type: String, trim: true, default: 'Anonymous' },
   user_thumb: { type: String },

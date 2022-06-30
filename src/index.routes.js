@@ -7,13 +7,17 @@ const morgan = require('morgan');
 const multer = require('multer');
 const { TOKENKEY, DBURI, DBURI_remote, NODE_ENV } = require('./config/env');
 
+const passport = require('passport');
 const login = require('./services/login/login.routes');
 const dashboard = require('./services/dashboard/index.routes');
 const course = require('./services/course/course.routes');
+const review = require('./services/review/review.routes');
+const google = require('./middlewares/google_authN');
 
 const { initPlans } = require('./services/plans/plans.model');
 
 module.exports = async (app) => {
+  
   app.use(cookieParser());
   app.use(express.json());
   app.use(morgan('dev'));
@@ -60,7 +64,7 @@ module.exports = async (app) => {
       resave: false,
       saveUninitialized: false,
       cookie: {
-        maxAge: 24 * 60 * 60 * 1000, //24 Hours OR Oneday
+        maxAge: 7 * 24 * 60 * 60 * 1000, //7 days OR ONE WEEK
         sameSite: NODE_ENV == 'dev' ? '' : 'none',
         secure: NODE_ENV == 'dev' ? false : true,
         httpOnly: false,
@@ -85,9 +89,13 @@ module.exports = async (app) => {
     };
   };
   // app.use(unless(['/admin/course/*', '/admin/user/*', '/myprofile'], multer().none()));
+  app.use(passport.initialize());
+  app.use(passport.session());
 
   //Routers
   app.use(login);
   app.use(dashboard);
   app.use(course);
+  app.use(review);
+  app.use(google);
 };

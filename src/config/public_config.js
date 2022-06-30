@@ -5,7 +5,7 @@ const levels = [
   },
   {
     type: 'intermediate',
-    icon: 'beginner_icon',
+    icon: 'intermediate_icon',
   },
   {
     type: 'advanced',

@@ -1,16 +1,20 @@
+const { Types } = require('mongoose');
 const Course = require('./course.model');
 const User = require('../user/user.model');
 const { successfulRes, failedRes } = require('../../utils/response');
 
 exports.getCourses = async (req, res) => {
+  const allowfilters = ['title', 'category', 'all'];
+  let query = { is_deleted: false };
   try {
-    let { filter = 'title', value = '', page=1 } = req.query;
+    let { filter = 'all', value, page = 1 } = req.query;
 
+    if (!allowfilters.includes(filter)) throw new Error('Invalid filter');
+    if (value) query[filter] = { $regex: value, $options: 'six' };
     const skip = (page - 1) * 16;
-    value = value ? { [filter]: { $regex: value, $options: 'six' }, is_deleted: false } : { is_deleted: false };
     let response = await Course.aggregate([
       {
-        $match: value,
+        $match: query,
       },
       {
         $sort: { createdAt: -1 },
@@ -29,11 +33,11 @@ exports.getCourses = async (req, res) => {
         },
       },
       {
-        $facet:{
-          "current_data": [{ $skip: skip },{ $limit: 16 },],
-          "page_info": [{ $count:"total_pages" }, {$addFields: { "page": page }},],
-        }
-      }
+        $facet: {
+          current_data: [{ $skip: skip }, { $limit: 16 }],
+          page_info: [{ $count: 'total_pages' }, { $addFields: { page: page } }],
+        },
+      },
     ]);
 
     return successfulRes(res, 200, response);
@@ -46,7 +50,7 @@ exports.getCourse = async (req, res) => {
   try {
     const _id = req.params.id;
     let response = await Course.findOne({ _id, is_deleted: false })
-      .select('-is_deleted -__v')
+      .select('-updatedAt -is_deleted -__v')
       .populate({ path: 'instructor._id', select: 'first_name last_name email photo' })
       .populate({ path: 'lessons', select: 'title' });
 
@@ -57,6 +61,43 @@ exports.getCourse = async (req, res) => {
       response._doc.price_egp = response._doc.price.egp;
       delete response._doc.price;
     }
+
+    return successfulRes(res, 200, response);
+  } catch (e) {
+    return failedRes(res, 500, e);
+  }
+};
+
+exports.getCourseDetails = async (req, res) => {
+  const allowdetails = ['reviews', 'resources'];
+  try {
+    const _id = req.params.id;
+    const { details } = req.query;
+    if (!allowdetails.includes(details)) throw new Error('Invalid details');
+
+    const response = await Course.aggregate([
+      {
+        $match: { _id: Types.ObjectId(_id), is_deleted: false },
+      },
+      {
+        $lookup: {
+          from: `${details}`,
+          localField: '_id',
+          foreignField: 'content_id',
+          as: `${details}`,
+        },
+      },
+      {
+        $unwind: `$${details}`,
+      },
+      {
+        $replaceRoot: { newRoot: `$${details}` },
+      },
+      { $limit: 50 },
+      {
+        $unset: ['_id', 'content_id', 'content_type', 'user_id', '__v'],
+      },
+    ]);
 
     return successfulRes(res, 200, response);
   } catch (e) {

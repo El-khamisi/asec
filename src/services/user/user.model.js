@@ -15,7 +15,7 @@ const userSchema = new mongoose.Schema(
     password: { type: String, required: [true, 'Password is required'] },
     isVerified: { type: Boolean, default: false },
     //
-    role: { type: String, enum: [...Object.values(roles), 'Invalid role title'], default: roles.Student },
+    role: { type: String, enum: Object.values(roles), default: roles.Student },
     about: { type: String, trim: true },
     rating: {
       _id: false,

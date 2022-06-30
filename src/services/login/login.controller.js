@@ -24,11 +24,15 @@ exports.regUser = async (req, res) => {
 
     req.session.user = saved;
 
-    saved.completed = undefined;
-    saved.reads = undefined;
-    saved.inprogress = undefined;
-    saved.password = undefined;
-    saved.quizzes = undefined;
+    const user = {
+      id: saved._id,
+      name: `${saved.first_name} ${saved.last_name}`,
+      photo: saved.photo,
+      email: saved.email,
+      isVerified: saved.isVerified,
+      role: saved.role,
+    };
+
     setS_id(req, res);
 
     //
@@ -45,7 +49,7 @@ exports.regUser = async (req, res) => {
     Click the link below to verify this email address
     ${server_domain}/email-verification/${verification.verification_hash}`
     );
-    return successfulRes(res, 201, { user: saved, token, email_verifiction: info.response });
+    return successfulRes(res, 201, { user, token, email_verifiction: info.response });
   } catch (e) {
     return failedRes(res, 500, e);
   }
@@ -76,14 +80,17 @@ exports.logUser = async (req, res) => {
 
       req.session.user = logged;
 
-      const user = { ...logged._doc };
-      user.completed = undefined;
-      user.reads = undefined;
-      user.inprogress = undefined;
-      user.quizzes = undefined;
+      const user = {
+        id: logged._id,
+        name: `${logged.first_name} ${logged.last_name}`,
+        photo: logged.photo,
+        email: logged.email,
+        isVerified: logged.isVerified,
+        role: logged.role,
+      };
 
       setS_id(req, res);
-      return successfulRes(res, 200, { user: user, token });
+      return successfulRes(res, 200, { user, token });
     }
   } catch (e) {
     return failedRes(res, 500, e);
