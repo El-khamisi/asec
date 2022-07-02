@@ -18,13 +18,14 @@ router.get('/email-verification/:hash', emailVerification);
 //Login-with google
 router.get('/login/google', passport.authenticate('google', { scope: ['email', 'profile'] }));
 
-router.get('/google/cb', passport.authenticate('google', { failureRedirect: '/google/faild', successRedirect: '/google/success' }), (req,res)=>{req.session.user = req.user; setS_id(req, res); res.end()});
+router.get('/google/cb', passport.authenticate('google', { failureRedirect: '/google/faild', successRedirect: '/google/success' }));
 
 router.get('/google/faild', function (req, res) {
   res.json('faild');
 });
 
 router.get('/google/success', function (req, res) {
+    (req,res)=>{req.session.user = req.user; setS_id(req, res);
     console.log('req.user', req.user);
     console.log('req.session.user', req.session.user);
     console.log('req.cookie', req.cookies);
