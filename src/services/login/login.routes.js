@@ -24,7 +24,7 @@ router.get('/google/faild', function (req, res) {
   res.json('faild');
 });
 
-router.get('/google/success',(req,res, next)=>{req.session.user = req.user; setS_id(req, res); next();}, function (req, res) {
+router.get('/google/success', function (req, res) {
     
     console.log('req.user', req.user);
     console.log('req.session.user', req.session.user);

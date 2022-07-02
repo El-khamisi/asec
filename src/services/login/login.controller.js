@@ -91,7 +91,7 @@ exports.logUser = async (req, res) => {
         role: logged.role,
       };
 
-      setS_id(req, res);
+      // setS_id(req, res);
       return successfulRes(res, 200, { user, token });
     }
   } catch (e) {
