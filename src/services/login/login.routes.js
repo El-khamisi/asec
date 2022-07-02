@@ -24,6 +24,9 @@ router.get('/google/faild', function (req, res) {
 });
 
 router.get('/google/success', function (req, res) {
+    console.log('req.user', req.user);
+    console.log('req.session.user', req.session.user);
+    console.log('req.cookie', req.cookies);
   res.json('success');
 });
 
