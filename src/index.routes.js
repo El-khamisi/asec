@@ -12,12 +12,10 @@ const login = require('./services/login/login.routes');
 const dashboard = require('./services/dashboard/index.routes');
 const course = require('./services/course/course.routes');
 const review = require('./services/review/review.routes');
-const google = require('./middlewares/google_authN');
 
 const { initPlans } = require('./services/plans/plans.model');
 
 module.exports = async (app) => {
-  
   app.use(cookieParser());
   app.use(express.json());
   app.use(morgan('dev'));
@@ -97,5 +95,4 @@ module.exports = async (app) => {
   app.use(dashboard);
   app.use(course);
   app.use(review);
-  app.use(google);
 };
