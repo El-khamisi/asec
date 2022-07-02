@@ -3,6 +3,7 @@ const passport = require('passport');
 const { logUser, regUser, logout, resetPassword } = require('./login.controller');
 const { authN } = require('../../middlewares/authN');
 const { emailVerification } = require('./email-verification.controller');
+const { setS_id } = require('../../utils/cookie');
 
 require('../../config/passport');
 
@@ -17,7 +18,7 @@ router.get('/email-verification/:hash', emailVerification);
 //Login-with google
 router.get('/login/google', passport.authenticate('google', { scope: ['email', 'profile'] }));
 
-router.get('/google/cb', passport.authenticate('google', { failureRedirect: '/google/faild', successRedirect: '/google/success' }));
+router.get('/google/cb', passport.authenticate('google', { failureRedirect: '/google/faild', successRedirect: '/google/success' }), (req,res)=>{req.session.user = req.user; setS_id(req, res); res.end()});
 
 router.get('/google/faild', function (req, res) {
   res.json('faild');
