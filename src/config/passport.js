@@ -23,6 +23,7 @@ passport.use(
       if(!user) {
         user = new User({
           ...profile,
+          password: 'google',
         })
         await user.save();
       }
