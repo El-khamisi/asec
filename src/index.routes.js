@@ -67,7 +67,7 @@ module.exports = async (app) => {
         secure: NODE_ENV == 'dev' ? false : true,
         httpOnly: false,
       },
-    }),(req, res, next)=>{console.log('Set-Cookie', res.getHeader('Set-Cookie')); next(); }
+    })
   );
   const unless = function (paths, middleware) {
     let flag = false;
@@ -95,4 +95,5 @@ module.exports = async (app) => {
   app.use(dashboard);
   app.use(course);
   app.use(review);
+  app.use((req, res, next)=>{console.log('Set-Cookie', res.getHeader('Set-Cookie')); next(); })
 };
