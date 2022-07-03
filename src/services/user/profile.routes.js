@@ -1,8 +1,6 @@
-const router = require('express').Router();
-
 const { authN } = require('../../middlewares/authN');
 const { imageUpload } = require('../../config/multer');
-const { profileView, profileUpdate, profileDelete, enroll, sendMail } = require('./profile.controller');
+const { profileView, profileUpdate, profileDelete, enroll } = require('./profile.controller');
 const { payment, paymentcb } = require('./payment.controller');
 const { submitQuiz } = require('../quiz/quiz.controllers');
 
@@ -12,10 +10,10 @@ router.put('/myprofile', authN, imageUpload.single('photo'), profileUpdate);
 router.delete('/myprofile', authN, profileDelete);
 
 router.post('/submit-quiz/:quiz_id', authN, submitQuiz);
-router.post('/enroll/:course_id', authN, enroll);
+router.post('/enroll/course/:course_id', authN, enroll);
+router.post('/enroll/spec/:spec_id', authN, enroll);
 router.post('/subscribe', authN, enroll);
 
-router.post('/contact-us', sendMail);
 router.post('/pay', authN, payment);
 router.post('/paycb', paymentcb);
 module.exports = router;

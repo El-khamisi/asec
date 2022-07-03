@@ -5,6 +5,7 @@ const validator = require('validator');
 //configuration
 const { TOKENKEY, NODE_ENV } = require('../../config/env');
 const roles = require('../../config/roles');
+const { memberships } = require('../../config/public_config');
 
 const userSchema = new mongoose.Schema(
   {
@@ -13,7 +14,7 @@ const userSchema = new mongoose.Schema(
     email: { type: String, trim: true, required: [true, 'Email is required'], unique: true, validate: [validator.isEmail, 'Invalid Email'] },
     phone: { type: String },
     password: { type: String, required: [true, 'Password is required'] },
-    isVerified: { type: Boolean, default: false },
+    is_verified: { type: Boolean, default: false },
     //
     role: { type: String, enum: Object.values(roles), default: roles.Student },
     about: { type: String, trim: true },
@@ -22,21 +23,21 @@ const userSchema = new mongoose.Schema(
       total_rate: { type: Number, default: 0 },
       avg_rate: { type: Number, set: (v) => Math.round(v * 10) / 10, default: 0.0 },
     },
-    end_of_membership: { type: Date },
-    inprogress: [
-      { course: { type: mongoose.Schema.Types.ObjectId, ref: 'Course' }, quizzes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Quiz' }] },
-    ],
-    completed: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Course' }],
-    reads: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Reading' }],
     photo: { type: String },
-    quizzes: [
+    courses: [
       {
-        _id: mongoose.Schema.Types.ObjectId,
-        name: String,
-        date: Date,
-        score: { type: Number, set: (v) => Math.round(v * 10) / 10 },
+        course_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Course', required: true },
+        lessons: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Lesson', required: true }],
+        is_completed: { type: Boolean, default: false },
+        total_mark: { type: Number, default: 0 },
+        subscription_type: { type: String, enum: memberships, default: memberships[0] },
+        subscription_expiry: Date,
+        installment_months: Number,
+        remaining_cost: Number,
+        payment_type: String,
       },
     ],
+    specs: [{ spec_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Spec', required: true }, courses: [ObjectId], is_completed: Boolean }],
   },
   { strict: false, timestamps: true }
 );

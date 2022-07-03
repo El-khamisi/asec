@@ -6,9 +6,11 @@ const { successfulRes, failedRes } = require('../../utils/response');
 const { setS_id } = require('../../utils/cookie');
 const { default: mongoose } = require('mongoose');
 const MongoStore = require('connect-mongo');
-const { NODE_ENV, TOKENKEY, to_email, server_domain } = require('../../config/env');
+const { NODE_ENV, TOKENKEY, to_email, server_domain, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_CALLBACK_URL } = require('../../config/env');
+const { google } = require('googleapis');
 const { smtpMail } = require('../../utils/smtp');
 
+let googleOauth2Client;
 exports.regUser = async (req, res) => {
   try {
     let { first_name, last_name, email, password } = req.body;
@@ -56,9 +58,7 @@ exports.regUser = async (req, res) => {
 };
 
 exports.logUser = async (req, res) => {
-  // let { email, password } = req.body;
-  const email = "admin@test.com";
-  const password= "admin123"
+  let { email, password } = req.body;
 
   if (!email || !password) {
     return failedRes(res, 400, null, 'Email and password are REQUIRED');
@@ -137,6 +137,40 @@ exports.resetPassword = async (req, res) => {
       await user.save();
       return successfulRes(res, 200, 'Password has been changed successfully');
     }
+  } catch (e) {
+    return failedRes(res, 500, e);
+  }
+};
+
+exports.loginWithGoogle = async (req, res) => {
+  try {
+    googleOauth2Client = new google.auth.OAuth2(GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_CALLBACK_URL);
+
+    const authorizeUrl = googleOauth2Client.generateAuthUrl({
+      scope: ['email', 'profile'],
+    });
+
+    return successfulRes(res, 200, { url: authorizeUrl });
+  } catch (e) {
+    return failedRes(res, 500, e);
+  }
+};
+
+exports.googleCallback = async (req, res) => {
+  try {
+    const { code } = req.query;
+    if (!code) throw new Error(`Error: Can't sign in with google.`);
+
+    const { tokens } = await googleOauth2Client.getToken();
+    oauth2Client.setCredentials(tokens);
+    // oauth2Client.verifyIdToken({});
+    const oauth2 = google.oauth2({
+      auth: oauth2Client,
+      version: 'v2',
+    });
+    const { data } = await oauth2.userinfo.get();
+
+    return successfulRes(res, 200, { data });
   } catch (e) {
     return failedRes(res, 500, e);
   }

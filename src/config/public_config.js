@@ -28,13 +28,13 @@ const subscriptions = [
   },
 ];
 
-const membership = ['free', 'paid'];
+const memberships = ['free', 'paid'];
 
 const categories = ['BIM', 'BEM', 'RD', 'RD'];
 
 module.exports = {
   subscriptions,
   levels,
-  membership,
+  memberships,
   categories,
 };

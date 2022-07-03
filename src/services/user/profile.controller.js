@@ -2,53 +2,38 @@ const ObjectId = require('mongoose').Types.ObjectId;
 const User = require('./user.model');
 const { successfulRes, failedRes } = require('../../utils/response');
 const Course = require('../course/course.model');
-const { premiumPlan } = require('../../config/membership');
+const { memberships } = require('../../config/public_config');
 const { upload_image } = require('../../config/cloudinary');
-const { to_email } = require('../../config/env');
-const { smtpMail } = require('../../utils/smtp');
+const {Student} = require('../../config/roles');
 
 exports.profileView = async (req, res) => {
   try {
-    const _id = res.locals.user.id;
+    const {_id} = req.session.user;
 
     const response = await User.aggregate([
       {
         $match: { _id: ObjectId(_id) },
       },
       {
-        $unset: ['password', 'createdAt', 'updatedAt', '__v'],
-      },
-      {
         $lookup: {
           from: 'courses',
-          localField: 'completed',
+          localField: 'courses.course_id',
           foreignField: '_id',
           pipeline: [
-            { $project: { name: 1, price: 1, photo: 1, membership: 1, level: 1, quizzes: 1 } },
-            { $addFields: { quizzes: { $size: '$quizzes' } } },
+            { $project: { title: 1, thumb: 1, instructor: 1, 'description.text': 1, lessons: 1 } },
+            { $addFields: { lessons_count: { $size: '$lessons' } } },
           ],
           as: 'completed',
         },
       },
       {
-        $lookup: {
-          from: 'courses',
-          localField: 'inprogress.course',
-          foreignField: '_id',
-          pipeline: [{ $project: { description: 0, createdAt: 0, updatedAt: 0, __v: 0 } }],
-          as: 'inprogress',
-        },
-      },
-      {
-        $lookup: {
-          from: 'readings',
-          localField: 'reads',
-          foreignField: '_id',
-          pipeline: [{ $project: { description: 0, createdAt: 0, updatedAt: 0, __v: 0 } }],
-          as: 'reads',
-        },
+        $unset: ['password', 'createdAt', '__v']
       },
     ]);
+    if(response.role == Student){
+      response.rating = undefined;
+      response.about = undefined;
+    }
 
     return successfulRes(res, 200, response[0]);
   } catch (e) {
@@ -58,24 +43,23 @@ exports.profileView = async (req, res) => {
 
 exports.profileUpdate = async (req, res) => {
   try {
-    const _id = res.locals.user.id;
-    const { first_name, last_name, email, phone, role, membership } = req.body;
-    const photo = req.file?.path;
+    const {_id} = req.session.user;
+    const { first_name, last_name, email, phone, photo} = req.body;
+    
 
     let doc = await User.findById(_id).exec();
 
-    if (photo) {
-      doc.photo = await upload_image(photo, doc._id, 'user_thumbs');
-    }
     doc.first_name = first_name ? first_name : doc.first_name;
     doc.last_name = last_name ? last_name : doc.last_name;
     doc.email = email ? email : doc.email;
     doc.phone = phone ? phone : doc.phone;
+    doc.photo = photo ? photo : doc.photo;
 
     const valid = doc.validateSync();
     if (valid) throw valid;
     await doc.save();
     doc.password = undefined;
+    req.session.user = doc;
     return successfulRes(res, 200, doc);
   } catch (e) {
     return failedRes(res, 500, e);
@@ -94,26 +78,30 @@ exports.profileDelete = async (req, res) => {
   }
 };
 
-exports.enroll = async (req, res) => {
+exports.enrollCourse = async (req, res) => {
   try {
     const course_id = req.params.course_id;
     const user = req.session.user;
 
-    user.completed.forEach((e) => {
-      if (e == course_id) throw new Error('Your have already completed to this course');
-    });
-    user.inprogress.forEach((e) => {
-      if (e.course == course_id) throw new Error('Your have already enrolled to this course');
+    user.courses.forEach((e) => {
+      if (e.course_id == course_id) {
+        if (e.is_completed) {
+          throw new Error('Your have already completed to this course');
+        }
+        throw new Error('Your have already enrolled to this course');
+      }
     });
 
     const course = Course.findById(course_id).exec();
-    if (course.membership == premiumPlan && course.instructor != user._id) {
+    if (course.membership == memberships[1] && course.instructor._id != user._id) {
       throw new Error('You should pay to enroll to premium courses');
     } else {
       const doc = await User.findByIdAndUpdate(user._id, {
-        $push: { inprogress: { course: course_id, quizzes: [] } },
+        $push: { courses: {course_id } },
       }).exec();
-      user.inprogress.push({ course: course_id, quizzes: [] });
+      user.courses.push({
+        course_id,
+      });
 
       return res.redirect(`/course/${course_id}`);
     }
@@ -122,18 +110,33 @@ exports.enroll = async (req, res) => {
   }
 };
 
-exports.sendMail = async (req, res) => {
-  const { from, text } = req.body;
-
+exports.completeCourse = async (req, res) => {
   try {
-    let userName = 'Guest User';
-    if (req.session && req.session.user) {
-      userName = req.session.user.last_name ? `${req.session.user.first_name} ${req.session.user.last_name}` : 'Guest User';
-    }
-    const subject = 'Email sent through contact us form';
-    const info = await smtpMail(to_email, userName, from, subject, text);
+    const course_id = req.params.course_id;
+    const user = req.session.user;
 
-    return successfulRes(res, 200, { response: info.response, from: info.envelope.from, to: info.envelope.to[0] });
+    user.courses.forEach((e) => {
+      if (e.course_id == course_id) {
+        if (e.is_completed) {
+          throw new Error('Your have already completed to this course');
+        }
+        throw new Error('Your have already enrolled to this course');
+      }
+    });
+
+    const course = Course.findById(course_id).exec();
+    if (course.membership == memberships[1] && course.instructor._id != user._id) {
+      throw new Error('You should pay to enroll to premium courses');
+    } else {
+      const doc = await User.findByIdAndUpdate(user._id, {
+        $push: { courses: {course_id } },
+      }).exec();
+      user.courses.push({
+        course_id,
+      });
+
+      return res.redirect(`/course/${course_id}`);
+    }
   } catch (e) {
     return failedRes(res, 500, e);
   }

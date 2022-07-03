@@ -7,11 +7,11 @@ const morgan = require('morgan');
 const multer = require('multer');
 const { TOKENKEY, DBURI, DBURI_remote, NODE_ENV } = require('./config/env');
 
-const passport = require('passport');
 const login = require('./services/login/login.routes');
 const dashboard = require('./services/dashboard/index.routes');
 const course = require('./services/course/course.routes');
 const review = require('./services/review/review.routes');
+const contact = require('./services/utils/contactUs');
 
 const { initPlans } = require('./services/plans/plans.model');
 
@@ -53,7 +53,6 @@ module.exports = async (app) => {
     res.set('Access-Control-Allow-Credentials', true);
     return next();
   });
-  app.set('trust proxy', 1);
 
   app.use(
     session({
@@ -66,11 +65,9 @@ module.exports = async (app) => {
         maxAge: 7 * 24 * 60 * 60 * 1000, //7 days OR ONE WEEK
         sameSite: NODE_ENV == 'dev' ? '' : 'none',
         secure: NODE_ENV == 'dev' ? false : true,
-        // secure: true,
-        // sameSite: 'none',
         httpOnly: false,
       },
-    }),(req, res, next)=>{console.log(req.session.cookie.httpOnly); next();}
+    })
   );
   const unless = function (paths, middleware) {
     let flag = false;
@@ -98,4 +95,5 @@ module.exports = async (app) => {
   app.use(dashboard);
   app.use(course);
   app.use(review);
+  app.use(contact);
 };
