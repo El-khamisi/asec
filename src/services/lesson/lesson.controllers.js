@@ -1,34 +1,57 @@
+const ObjectId = require('mongoose').Types.ObjectId;
 const Course = require('../course/course.model');
 const Lesson = require('./lesson.model');
-const { successfulRes, failedRes } = require('../../utils/response');
-// const { premiumPlan } = require('../../config/membership');
 const { Instructor } = require('../../config/roles');
-const User = require('../user/user.model');
+const Comment = require('../comment/comment.model');
+const { successfulRes, failedRes } = require('../../utils/response');
+const { subscriptions } = require('../subscription/subscription.model');
 
 exports.getLesson = async (req, res) => {
   try {
     const course_id = req.params.course_id;
     const lesson_id = req.params.lesson_id;
     const user = req.session.user;
-    let doc;
 
-    const course = await Course.findById(course_id).exec();
-    if (!course) {
-      throw new Error(`Can NOT find a Course with ID-${course_id}`);
-    } else if (course.membership == premiumPlan && course.instructor != user._id) {
-      const tempProgress = user.inprogress.map((e) => e.course);
-      if (tempProgress.includes(course_id) || user.completed.includes(course_id)) {
-        doc = await Lesson.findById(lesson_id).exec();
-      }
+    const user_course = user.courses.find((e) => e.course_id == course_id);
+    const db_course = user_course ? await Course.findById(course_id).exec() : new Error('You have NOT enrolled in this course yet');
+    if (!db_course) return failedRes(res, 401, db_course);
 
-      if (!doc) {
-        throw new Error(`You are not allowed to view this lesson \
-OR there is no such lesson with ID-${lesson_id}`);
-      }
-    } else {
-      doc = await Lesson.findById(lesson_id).exec();
+    let doc = await Lesson.findById(lesson_id).exec();
+    if (user.role == Instructor) return successfulRes(res, 200, doc);
+
+    const lessonIndex = db_course.lessons.indexOf(lesson_id);
+    if (lessonIndex < 0) return failedRes(res, 404, new Error(`This lesson does NOT belong to course[${db_course.title}]`));
+
+    if (user_course.subscription.type != subscriptions.lifeTime && user_course.length != lessonIndex) {
+      return failedRes(res, 401, new Error(`You must be finsh all lessons before lesson number ${lessonIndex + 1}`));
     }
+
     return successfulRes(res, 200, doc);
+  } catch (e) {
+    return failedRes(res, 500, e);
+  }
+};
+
+exports.getLessonDetials = async (req, res) => {
+  try {
+    const lesson_id = req.params.lesson_id;
+    const response = Comment.aggregate([
+      {
+        $match: { _id: ObjectId(lesson_id) },
+      },
+      {
+        $graphLookup: {
+          from: 'comments',
+          startWith: '$comments',
+          connectFromField: 'replies',
+          connectToField: '_id',
+          maxDepth: 10,
+          depthField: 'depthOfReplies',
+          as: 'comments',
+        },
+      },
+    ]);
+    return successfulRes(res, 200, response);
   } catch (e) {
     return failedRes(res, 500, e);
   }
@@ -42,19 +65,21 @@ exports.addLesson = async (req, res) => {
     const course = await Course.findById(course_id).exec();
     if (!course) throw new Error(`Can NOT find a Course with ID-${course_id}`);
 
-    let lessonsAdded = 0;
-    lessons.forEach(async (e) => {
-      const saved = new Lesson({
+    let lessonsAdded = [];
+
+    lessons.forEach((e) => {
+      const doc = new Lesson({
         title: e.title,
         video_url: e.video_url,
         course_id: course_id,
       });
-      lessonsAdded++;
-      await saved.save();
+      lessonsAdded.push(doc);
+      course.lessons.push(doc._id);
     });
-
-    let response = `Number of lessons has been added: ${lessonsAdded}`;
     await course.save();
+
+    const saved = await Lesson.insertMany(lessonsAdded);
+    let response = `Number of lessons has been added: ${saved}`;
     return successfulRes(res, 201, response);
   } catch (e) {
     return failedRes(res, 500, e);
@@ -92,8 +117,26 @@ exports.updateLesson = async (req, res) => {
 exports.deleteLesson = async (req, res) => {
   try {
     const _id = req.params.id;
+    const force = req.query.force;
 
-    const response = await Lesson.findByIdAndDelete(_id).exec();
+    let response;
+    if (force == true) {
+      const doc = await Lesson.findByIdAndDelete(_id).exec();
+      response = { message: `Lesson[${doc.title}] has been deleted successfully with --FORCE Option` };
+    } else {
+      const doc = await Lesson.findByIdAndUpdate(_id, { is_deleted: true }).exec();
+      response = { message: `Lesson[${doc.title}] has been deleted successfully --SOFTLY` };
+    }
+
+    return successfulRes(res, 200, response);
+  } catch (e) {
+    return failedRes(res, 500, e);
+  }
+};
+
+exports.actLesson = async (req, res) => {
+  try {
+    let response;
 
     return successfulRes(res, 200, response);
   } catch (e) {

@@ -1,11 +1,11 @@
 const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
 const validator = require('validator');
+const { subscriptions } = require('../subscription/subscription.model');
 
 //configuration
 const { TOKENKEY, NODE_ENV } = require('../../config/env');
 const roles = require('../../config/roles');
-const { memberships } = require('../../config/public_config');
 
 const userSchema = new mongoose.Schema(
   {
@@ -30,8 +30,11 @@ const userSchema = new mongoose.Schema(
         lessons: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Lesson', required: true }],
         is_completed: { type: Boolean, default: false },
         total_mark: { type: Number, default: 0 },
-        subscription_type: { type: String, enum: memberships, default: memberships[0] },
-        subscription_expiry: Date,
+        subscription: {
+          _id: false,
+          type: { type: String, enum: Object.values(subscriptions), require: true },
+          expiry: Date,
+        },
         installment_months: Number,
         remaining_cost: Number,
         payment_type: String,

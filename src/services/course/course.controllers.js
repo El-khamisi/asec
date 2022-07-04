@@ -2,6 +2,8 @@ const { Types } = require('mongoose');
 const Course = require('./course.model');
 const User = require('../user/user.model');
 const { successfulRes, failedRes } = require('../../utils/response');
+const { exchange_api } = require('../../config/env');
+const { axios } = require('axios');
 
 exports.getCourses = async (req, res) => {
   const allowfilters = ['title', 'category', 'all'];
@@ -107,9 +109,16 @@ exports.getCourseDetails = async (req, res) => {
 
 exports.addCourse = async (req, res) => {
   try {
-    const { title, thumb, instructor, description_text, description_list, price_usd, price_egp, membership, level, category, project, spec } =
+    let { title, thumb, instructor, description_text, description_list, price_usd, price_egp, membership, level, category, project, spec, lessons } =
       req.body;
 
+    if (price_usd) {
+      price_egp = await axios.get(`https://api.apilayer.com/exchangerates_data/convert?from=USD&to=EGP&amount=${price_usd}`, {
+        headers: {
+          apikey: `${exchange_api}`,
+        },
+      });
+    }
     const saved = new Course({
       title,
       thumb,
@@ -125,12 +134,14 @@ exports.addCourse = async (req, res) => {
       },
       price: {
         usd: price_usd,
+        egp: price_egp,
       },
       membership,
       level,
       category,
       project,
       spec,
+      lessons,
     });
     await saved.save();
 
@@ -143,22 +154,45 @@ exports.addCourse = async (req, res) => {
 exports.updateCourse = async (req, res) => {
   try {
     const _id = req.params.id;
-    const { name, price, instructor, text, list, membership, level, quizzes } = req.body;
-    const photo = req.file?.path;
+    let { title, thumb, instructor, description_text, description_list, price_usd, price_egp, membership, level, category, project, spec, lessons } =
+      req.body;
 
-    let doc = await Course.findById(_id).exec();
+    if (price_usd) {
+      price_egp = await axios.get(`https://api.apilayer.com/exchangerates_data/convert?from=USD&to=EGP&amount=${price_usd}`, {
+        headers: {
+          apikey: `${exchange_api}`,
+        },
+      });
+    }
 
-    doc.name = name ? name : doc.name;
-    doc.price = price ? price : doc.price;
-    doc.level = level ? level : doc.level;
-    doc.instructor = instructor ? instructor : doc.instructor;
-    doc.membership = membership ? membership : doc.membership;
-    doc.description = {
-      text: text ? text : doc.description.text,
-      list: list ? list : doc.description.list,
-    };
-    doc.quizzes = quizzes ? quizzes : doc.quizzes;
-    await doc.save();
+    if (instructor) {
+      instructor = {
+        _id: instructor,
+        name: await User.findById(instructor)
+          .select('first_name last_name')
+          .then((user) => `${user.first_name} ${user.last_name}`),
+      };
+    }
+
+    let doc = await Course.findByIdAndUpdate(_id, {
+      title,
+      thumb,
+      instructor,
+      description: {
+        text: description_text,
+        list: description_list,
+      },
+      price: {
+        usd: price_usd,
+        egp: price_egp,
+      },
+      membership,
+      level,
+      category,
+      project,
+      spec,
+      lessons,
+    }).exec();
 
     return successfulRes(res, 200, doc);
   } catch (e) {
@@ -169,10 +203,18 @@ exports.updateCourse = async (req, res) => {
 exports.deleteCourse = async (req, res) => {
   try {
     const _id = req.params.id;
+    const force = req.query.force;
 
-    const response = await Course.findByIdAndUpdate(_id, { is_deleted: true }).exec();
+    let response;
+    if (force == true) {
+      const doc = await Course.findByIdAndDelete(_id).exec();
+      response = { message: `Course[${doc.title}] has been deleted successfully with --FORCE Option` };
+    } else {
+      const doc = await Course.findByIdAndUpdate(_id, { is_deleted: true }).exec();
+      response = { message: `Course[${doc.title}] has been deleted successfully --SOFTLY` };
+    }
 
-    return successfulRes(res, 200, response);
+    return successfulRes(res, 200);
   } catch (e) {
     return failedRes(res, 500, e);
   }

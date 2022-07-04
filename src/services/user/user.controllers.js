@@ -1,10 +1,8 @@
 const bcrypt = require('bcrypt');
 const User = require('./user.model');
 const { successfulRes, failedRes } = require('../../utils/response');
-const { upload_image } = require('../../config/cloudinary');
 const { plansNames } = require('../plans/plans.model');
 const { subscribe } = require('../../utils/subscribe');
-// const { premiumPlan, freePlan } = require('../../config/membership');
 
 exports.verify = (req, res) => {
   successfulRes(res, 200, { token: res.locals.user });
@@ -42,8 +40,7 @@ exports.getUser = async (req, res) => {
 
 exports.addUser = async (req, res) => {
   try {
-    const { first_name, last_name, email, phone, password, role, membership, memberplan } = req.body;
-    const photo = req.file?.path;
+    const { first_name, last_name, email, phone, password, role, photo, membership, memberplan } = req.body;
 
     if (membership == premiumPlan && Object.values(plansNames).includes(memberplan) && memberplan != plansNames.None) {
       doc.membership = premiumPlan;
@@ -70,9 +67,7 @@ exports.addUser = async (req, res) => {
     } else {
       throw new Error('Invalid Password');
     }
-    if (photo) {
-      saved.photo = await upload_image(photo, saved._id, 'user_thumbs');
-    }
+
     await saved.save();
 
     return successfulRes(res, 201, saved);
@@ -84,29 +79,15 @@ exports.addUser = async (req, res) => {
 exports.updateUser = async (req, res) => {
   try {
     const _id = req.params.id;
-    const { first_name, last_name, email, phone, password, role, membership, memberplan } = req.body;
-    const photo = req.file?.path;
+    const { first_name, last_name, email, phone, password, photo, role, membership, memberplan } = req.body;
 
     let doc = await User.findById(_id);
-    if (photo) {
-      doc.photo = await upload_image(photo, doc._id, 'user_thumbs');
-    }
+
     doc.first_name = first_name ? first_name : doc.first_name;
     doc.last_name = last_name ? last_name : doc.last_name;
     doc.email = email ? email : doc.email;
     doc.phone = phone ? phone : doc.phone;
     doc.role = role ? role : doc.role;
-    // doc.membership = membership ? membership : doc.membership;
-    if (membership == freePlan) {
-      doc.membership = freePlan;
-    } else if (membership == premiumPlan && Object.values(plansNames).includes(memberplan) && memberplan != plansNames.None) {
-      doc.membership = premiumPlan;
-      doc.memberplan = memberplan;
-      doc.end_of_membership = subscribe(memberplan, doc.end_of_membership);
-    } else {
-      await doc.save();
-      throw new Error(`Provide valid plan name-${memberplan}`);
-    }
 
     if (password) {
       doc.password = bcrypt.hashSync(password, 10);

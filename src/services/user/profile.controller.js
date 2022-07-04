@@ -4,11 +4,11 @@ const { successfulRes, failedRes } = require('../../utils/response');
 const Course = require('../course/course.model');
 const { memberships } = require('../../config/public_config');
 const { upload_image } = require('../../config/cloudinary');
-const {Student} = require('../../config/roles');
+const { Student } = require('../../config/roles');
 
 exports.profileView = async (req, res) => {
   try {
-    const {_id} = req.session.user;
+    const { _id } = req.session.user;
 
     const response = await User.aggregate([
       {
@@ -27,10 +27,10 @@ exports.profileView = async (req, res) => {
         },
       },
       {
-        $unset: ['password', 'createdAt', '__v']
+        $unset: ['password', 'createdAt', '__v'],
       },
     ]);
-    if(response.role == Student){
+    if (response.role == Student) {
       response.rating = undefined;
       response.about = undefined;
     }
@@ -43,9 +43,8 @@ exports.profileView = async (req, res) => {
 
 exports.profileUpdate = async (req, res) => {
   try {
-    const {_id} = req.session.user;
-    const { first_name, last_name, email, phone, photo} = req.body;
-    
+    const { _id } = req.session.user;
+    const { first_name, last_name, email, phone, photo } = req.body;
 
     let doc = await User.findById(_id).exec();
 
@@ -97,7 +96,7 @@ exports.enrollCourse = async (req, res) => {
       throw new Error('You should pay to enroll to premium courses');
     } else {
       const doc = await User.findByIdAndUpdate(user._id, {
-        $push: { courses: {course_id } },
+        $push: { courses: { course_id } },
       }).exec();
       user.courses.push({
         course_id,
@@ -129,7 +128,7 @@ exports.completeCourse = async (req, res) => {
       throw new Error('You should pay to enroll to premium courses');
     } else {
       const doc = await User.findByIdAndUpdate(user._id, {
-        $push: { courses: {course_id } },
+        $push: { courses: { course_id } },
       }).exec();
       user.courses.push({
         course_id,
