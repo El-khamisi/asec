@@ -8,6 +8,7 @@ const specSchema = new mongoose.Schema({
     total_rate: { type: Number, default: 0 },
     avg_rate: { type: Number, set: (v) => Math.round(v * 10) / 10, default: 0.0 },
   },
+  courses: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Course' }],
 });
 
 module.exports = mongoose.model('Spec', specSchema);

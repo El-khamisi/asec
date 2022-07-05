@@ -1,7 +1,6 @@
 const bcrypt = require('bcrypt');
 const User = require('./user.model');
 const { successfulRes, failedRes } = require('../../utils/response');
-const { plansNames } = require('../plans/plans.model');
 const { subscribe } = require('../../utils/subscribe');
 
 exports.verify = (req, res) => {
@@ -16,7 +15,7 @@ exports.getUsers = async (req, res) => {
         $sort: { createdAt: -1 },
       },
       {
-        $project: { first_name: 1, last_name: 1, email: 1, membership: 1, memberplan: 1 },
+        $project: { first_name: 1, last_name: 1, email: 1, is_verified: 1, role: 1, photo: 1 },
       },
     ]);
     return successfulRes(res, 200, response);
@@ -40,16 +39,7 @@ exports.getUser = async (req, res) => {
 
 exports.addUser = async (req, res) => {
   try {
-    const { first_name, last_name, email, phone, password, role, photo, membership, memberplan } = req.body;
-
-    if (membership == premiumPlan && Object.values(plansNames).includes(memberplan) && memberplan != plansNames.None) {
-      doc.membership = premiumPlan;
-      doc.memberplan = memberplan;
-      doc.end_of_membership = subscribe(memberplan, doc.end_of_membership);
-    } else {
-      await doc.save();
-      throw new Error(`Provide valid plan name-${memberplan}`);
-    }
+    const { first_name, last_name, email, phone, password, role, photo } = req.body;
 
     const saved = new User({
       first_name,
@@ -58,8 +48,7 @@ exports.addUser = async (req, res) => {
       phone,
       password,
       role,
-      membership,
-      memberplan,
+
       photo,
     });
     if (password) {
@@ -79,7 +68,7 @@ exports.addUser = async (req, res) => {
 exports.updateUser = async (req, res) => {
   try {
     const _id = req.params.id;
-    const { first_name, last_name, email, phone, password, photo, role, membership, memberplan } = req.body;
+    const { first_name, last_name, email, phone, password, photo, role } = req.body;
 
     let doc = await User.findById(_id);
 

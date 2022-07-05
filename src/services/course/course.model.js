@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const { levels, memberships, categories } = require('../../config/public_config');
 
+const allowed = ['days', 'weeks', 'months', 'years'];
 const courseSchema = new mongoose.Schema(
   {
     title: { type: String, trim: true, required: true, unique: true, index: true },
@@ -25,6 +26,23 @@ const courseSchema = new mongoose.Schema(
       total_rate: { type: Number, default: 0 },
       avg_rate: { type: Number, set: (v) => Math.round(v * 10) / 10, default: 0.0 },
     },
+    cashback: [
+      {
+        _id: false,
+        duration: {
+          type: String,
+          trim: true,
+          required: true,
+          validate: {
+            validator: function (v) {
+              return allowed.find((e) => v.split(e).length == 2 && v.split(' ').length == 2);
+            },
+            message: (e) => `Invalid input duration ${e} should be in form: {14 [days/weeks/ months/ years]}`,
+          },
+        },
+        rate: { type: Number, required: true, set: (v) => Math.round(v * 10) / 10 },
+      },
+    ],
     membership: { type: String, enum: memberships, default: memberships[0] },
     level: { type: String, enum: levels.map((e) => e.type) },
     category: { type: String, enum: categories, index: true },

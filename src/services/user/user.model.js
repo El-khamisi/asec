@@ -33,9 +33,9 @@ const userSchema = new mongoose.Schema(
         subscription: {
           _id: false,
           type: { type: String, enum: Object.values(subscriptions), require: true },
-          expiry: Date,
+          expires_at: Date,
         },
-        installment_months: Number,
+        installment_months: { type: Number, default: 0 },
         remaining_cost: Number,
         payment_type: String,
       },

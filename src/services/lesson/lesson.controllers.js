@@ -22,6 +22,9 @@ exports.getLesson = async (req, res) => {
     const lessonIndex = db_course.lessons.indexOf(lesson_id);
     if (lessonIndex < 0) return failedRes(res, 404, new Error(`This lesson does NOT belong to course[${db_course.title}]`));
 
+    if (new Date(user_course.subscription.expires_at.split('T')[0]) < new Date().toISOString().split('T')[0]) {
+      return failedRes(res, 401, new Error(`Your subscription `));
+    }
     if (user_course.subscription.type != subscriptions.lifeTime && user_course.length != lessonIndex) {
       return failedRes(res, 401, new Error(`You must be finsh all lessons before lesson number ${lessonIndex + 1}`));
     }

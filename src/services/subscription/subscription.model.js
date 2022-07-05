@@ -15,6 +15,11 @@ const subscriptionSchema = new mongoose.Schema({
       cashback_rate: { type: Number, required: true, set: (v) => Math.round(v * 10) / 10 },
     },
   ],
+  description: {
+    _id: false,
+    text: { type: String, trim: true },
+    list: { type: [String], trim: true },
+  },
 });
 
 module.exports = {
