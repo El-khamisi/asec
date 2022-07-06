@@ -10,7 +10,7 @@ exports.emailVerification = async (req, res) => {
       const user = await User.findById(hashDoc.user_id).exec();
       user.isVerified = true;
       await user.save();
-      await hashDoc.remove();
+      await Verification.deleteMany({ user_id: user.id });
       return successfulRes(res, 200, { msg: 'Email verified successfully' });
     } else {
       throw new Error('Invalid verification link');

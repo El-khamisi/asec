@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const { levels, memberships, categories } = require('../../config/public_config');
+const { levels, categories } = require('../../config/public_config');
 
 const allowed = ['days', 'weeks', 'months', 'years'];
 const courseSchema = new mongoose.Schema(
@@ -43,10 +43,11 @@ const courseSchema = new mongoose.Schema(
         rate: { type: Number, required: true, set: (v) => Math.round(v * 10) / 10 },
       },
     ],
-    membership: { type: String, enum: memberships, default: memberships[0] },
+    membership: { type: String, enum: ['free', 'paid'], default: 'free' },
     level: { type: String, enum: levels.map((e) => e.type) },
     category: { type: String, enum: categories, index: true },
     project: { type: mongoose.Schema.Types.ObjectId, ref: 'Project' },
+    estimated_months: { type: Number, required: true },
     spec: { type: mongoose.Schema.Types.ObjectId, ref: 'Spec' },
     lessons: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Lesson' }],
     is_deleted: { type: Boolean, default: false },
@@ -59,6 +60,12 @@ courseSchema.virtual('quizzes', {
   ref: 'Quiz',
   localField: '_id',
   foreignField: 'course_id',
+});
+courseSchema.pre(['save', 'update', 'updateOne', 'updateMany', 'init'], { document: true, query: false }, function (next) {
+  if (this.price.usd > 0 && this.price.egp > 0) {
+    this.membership = 'paid';
+  }
+  next();
 });
 
 module.exports = mongoose.model('Course', courseSchema);

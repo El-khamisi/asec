@@ -1,11 +1,11 @@
 const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
 const validator = require('validator');
-const { subscriptions } = require('../subscription/subscription.model');
 
 //configuration
 const { TOKENKEY, NODE_ENV } = require('../../config/env');
 const roles = require('../../config/roles');
+const { subscriptions } = require('../../config/public_config');
 
 const userSchema = new mongoose.Schema(
   {
@@ -40,7 +40,13 @@ const userSchema = new mongoose.Schema(
         payment_type: String,
       },
     ],
-    specs: [{ spec_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Spec', required: true }, courses: [ObjectId], is_completed: Boolean }],
+    specs: [
+      {
+        spec_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Spec', required: true },
+        courses: [mongoose.Schema.Types.ObjectId],
+        is_completed: Boolean,
+      },
+    ],
   },
   { strict: false, timestamps: true }
 );
@@ -59,11 +65,11 @@ userSchema.methods.generateToken = function (req, res) {
   );
 
   // req.session.user = this;
-  res.cookie('authorization', token, {
-    maxAge: 7 * 24 * 60 * 60 * 1000, //7 days OR ONE WEEK
-    sameSite: NODE_ENV == 'dev' ? false : 'none',
-    secure: NODE_ENV == 'dev' ? false : true,
-  });
+  // res.cookie('authorization', token, {
+  //   maxAge: 7 * 24 * 60 * 60 * 1000, //7 days OR ONE WEEK
+  //   sameSite: NODE_ENV == 'dev' ? false : 'none',
+  //   secure: NODE_ENV == 'dev' ? false : true,
+  // });
   return token;
 };
 

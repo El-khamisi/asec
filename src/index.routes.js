@@ -11,9 +11,7 @@ const login = require('./services/login/login.routes');
 const dashboard = require('./services/dashboard/index.routes');
 const course = require('./services/course/course.routes');
 const review = require('./services/review/review.routes');
-const contact = require('./services/utils/contactUs');
-
-const { initPlans } = require('./services/plans/plans.model');
+const contact = require('./services/utils/contactUs.routes');
 
 module.exports = async (app) => {
   app.use(cookieParser());
@@ -42,7 +40,6 @@ module.exports = async (app) => {
         console.log("can't connect to database");
       });
   }
-  initPlans();
 
   // Middlewares
   app.use((req, res, next) => {
@@ -87,8 +84,6 @@ module.exports = async (app) => {
     };
   };
   // app.use(unless(['/admin/course/*', '/admin/user/*', '/myprofile'], multer().none()));
-  app.use(passport.initialize());
-  app.use(passport.session());
 
   //Routers
   app.use(login);

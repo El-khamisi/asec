@@ -47,9 +47,9 @@ exports.regUser = async (req, res) => {
       to_email,
       'textgenuss email verification',
       `Hello ${saved.first_name} ${saved.last_name},
-    You requested to use this email address to access your Textgenuss account.
+    You requested to use this email address to access your Shuhyb Academy account.
     Click the link below to verify this email address
-    ${server_domain}/email-verification/${verification.verification_hash}`
+    ${server_domain}/email-confirmation/${verification.verification_hash}`
     );
     return successfulRes(res, 201, { user, token, email_verifiction: info.response });
   } catch (e) {
@@ -171,6 +171,30 @@ exports.googleCallback = async (req, res) => {
     const { data } = await oauth2.userinfo.get();
 
     return successfulRes(res, 200, { data });
+  } catch (e) {
+    return failedRes(res, 500, e);
+  }
+};
+
+exports.reverifyEmail = async (req, res) => {
+  try {
+    const user = req.session;
+
+    const hash = crypto.createHmac('sha256', TOKENKEY).update(user._id.toString()).digest('hex');
+    const verification = new Verification({ verification_hash: hash, user_id: user._id });
+    await verification.save();
+    const info = await smtpMail(
+      user.email,
+      'textgenuss',
+      to_email,
+      'textgenuss email verification',
+      `Hello ${user.first_name} ${user.last_name},
+ You requested to use this email address to access your Shuhyb Academy account.
+ Click the link below to verify this email address
+ ${server_domain}/email-confirmation/${verification.verification_hash}`
+    );
+
+    return successfulRes(res, 201, { email_verifiction: info.response });
   } catch (e) {
     return failedRes(res, 500, e);
   }

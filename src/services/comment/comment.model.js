@@ -4,10 +4,11 @@ const commentSchema = new mongoose.Schema(
   {
     lesson_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Lesson' },
     user: {
-      id: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+      _id: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
       name: { type: String, trim, required: true },
-      photo: { type: String, required: true },
+      photo: { type: String },
     },
+    text: { type: String, required: true },
     likes: { type: Number, default: 0 },
     replies: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Comment' }],
   },

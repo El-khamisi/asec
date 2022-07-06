@@ -2,8 +2,6 @@ const ObjectId = require('mongoose').Types.ObjectId;
 const User = require('./user.model');
 const { successfulRes, failedRes } = require('../../utils/response');
 const Course = require('../course/course.model');
-const { memberships } = require('../../config/public_config');
-const { upload_image } = require('../../config/cloudinary');
 const { Student } = require('../../config/roles');
 
 exports.profileView = async (req, res) => {
@@ -82,20 +80,22 @@ exports.enrollCourse = async (req, res) => {
     const course_id = req.params.course_id;
     const user = req.session.user;
 
-    user.courses.forEach((e) => {
+    for (const e of user.courses) {
       if (e.course_id == course_id) {
+        let error;
         if (e.is_completed) {
-          throw new Error('Your have already completed to this course');
+          error = new Error('Your have already completed to this course');
         }
-        throw new Error('Your have already enrolled to this course');
+        error = new Error('Your have already enrolled to this course');
       }
-    });
+      return failedRes(res, 400, error);
+    }
 
-    const course = Course.findById(course_id).exec();
-    if (course.membership == memberships[1] && course.instructor._id != user._id) {
-      throw new Error('You should pay to enroll to premium courses');
+    const course = await Course.findById(course_id).exec();
+    if (course.membership != 'free' && course.instructor._id != user._id) {
+      return failedRes(res, 401, new Error('You should pay to enroll to premium courses'));
     } else {
-      const doc = await User.findByIdAndUpdate(user._id, {
+      await User.findByIdAndUpdate(user._id, {
         $push: { courses: { course_id } },
       }).exec();
       user.courses.push({
@@ -114,28 +114,11 @@ exports.completeCourse = async (req, res) => {
     const course_id = req.params.course_id;
     const user = req.session.user;
 
-    user.courses.forEach((e) => {
-      if (e.course_id == course_id) {
-        if (e.is_completed) {
-          throw new Error('Your have already completed to this course');
-        }
-        throw new Error('Your have already enrolled to this course');
-      }
-    });
-
-    const course = Course.findById(course_id).exec();
-    if (course.membership == memberships[1] && course.instructor._id != user._id) {
-      throw new Error('You should pay to enroll to premium courses');
-    } else {
-      const doc = await User.findByIdAndUpdate(user._id, {
-        $push: { courses: { course_id } },
-      }).exec();
-      user.courses.push({
-        course_id,
-      });
-
-      return res.redirect(`/course/${course_id}`);
+    for (const e of user.courses) {
+      if (e.course_id == course_id && e.is_completed) return failedRes(res, 400, new Error('Your have already completed to this course'));
     }
+
+    const course = await Course.findById(course_id).exec();
   } catch (e) {
     return failedRes(res, 500, e);
   }

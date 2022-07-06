@@ -9,8 +9,8 @@ router.get('/course/:id', getCourse);
 router.get('/course/details/:id', getCourseDetails);
 
 //Courses
-router.post('/courses', autN, isInstructor, addCourse);
-router.put('/courses/:id', authN, isAdmin, updateCourse);
-router.delete('/courses/:id', authN, isAdmin, deleteCourse);
+router.post('/courses', authN, isInstructor, addCourse);
+router.put('/courses/:id', authN, isInstructor, updateCourse);
+router.delete('/courses/:id', authN, isInstructor, deleteCourse);
 
 module.exports = router;

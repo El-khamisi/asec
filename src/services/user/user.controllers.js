@@ -1,7 +1,6 @@
 const bcrypt = require('bcrypt');
 const User = require('./user.model');
 const { successfulRes, failedRes } = require('../../utils/response');
-const { subscribe } = require('../../utils/subscribe');
 
 exports.verify = (req, res) => {
   successfulRes(res, 200, { token: res.locals.user });

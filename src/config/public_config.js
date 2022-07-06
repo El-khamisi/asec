@@ -13,10 +13,17 @@ const levels = [
   },
 ];
 
+const subscriptions = {
+  free: 'free',
+  studentSupport: 'student support',
+  cashBack: 'cash back',
+  lifeTime: 'life time access',
+};
+
 const categories = ['BIM', 'BEM', 'RD', 'RD'];
 
 module.exports = {
   levels,
-  memberships,
+  subscriptions,
   categories,
 };

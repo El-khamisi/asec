@@ -1,11 +1,7 @@
 const mongoose = require('mongoose');
+const { subscriptions } = require('../../config/public_config');
 
-const subscriptions = {
-  free: 'free',
-  studentSupport: 'student support',
-  cashBack: 'cash back',
-  lifeTime: 'life time access',
-};
+subscriptions;
 const subscriptionSchema = new mongoose.Schema({
   title: { type: String, enum: Object.values(subscriptions), required: true, unique: true },
   discounts: [
@@ -22,7 +18,4 @@ const subscriptionSchema = new mongoose.Schema({
   },
 });
 
-module.exports = {
-  Subscription: mongoose.model('Subscription', subscriptionSchema),
-  subscriptions,
-};
+module.exports = mongoose.model('Subscription', subscriptionSchema);

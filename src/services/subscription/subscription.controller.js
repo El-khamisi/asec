@@ -1,4 +1,5 @@
-const { subscriptions, Subscription } = require('./subscription.model');
+const Subscription = require('./subscription.model');
+const { subscriptions } = require('../../config/public_config');
 const { successfulRes, failedRes } = require('../../utils/response');
 
 exports.getSubscriptions = async (req, res) => {

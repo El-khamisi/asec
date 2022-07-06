@@ -1,4 +1,4 @@
-const { Types } = require('mongoose');
+const ObjectId = require('mongoose').Schema.Types.ObjectId;
 const Course = require('./course.model');
 const User = require('../user/user.model');
 const { successfulRes, failedRes } = require('../../utils/response');
@@ -79,7 +79,7 @@ exports.getCourseDetails = async (req, res) => {
 
     const response = await Course.aggregate([
       {
-        $match: { _id: Types.ObjectId(_id), is_deleted: false },
+        $match: { _id: ObjectId(_id), is_deleted: false },
       },
       {
         $lookup: {

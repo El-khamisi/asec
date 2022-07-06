@@ -15,3 +15,5 @@ router.post('/contact-us', async (req, res) => {
     return failedRes(res, 500, e);
   }
 });
+
+module.exports = router;

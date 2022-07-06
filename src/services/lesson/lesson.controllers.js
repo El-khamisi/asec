@@ -4,7 +4,8 @@ const Lesson = require('./lesson.model');
 const { Instructor } = require('../../config/roles');
 const Comment = require('../comment/comment.model');
 const { successfulRes, failedRes } = require('../../utils/response');
-const { subscriptions } = require('../subscription/subscription.model');
+const { subscriptions } = require('../../config/public_config');
+const Comment = require('../comment/comment.model');
 
 exports.getLesson = async (req, res) => {
   try {
@@ -63,7 +64,13 @@ exports.getLessonDetials = async (req, res) => {
 exports.addLesson = async (req, res) => {
   try {
     const course_id = req.params.course_id;
-    const { lessons } = req.body;
+    let { lessons } = req.body;
+
+    if (typeof lessons == 'object' || lessons instanceof Object) {
+      const arr = [lessons];
+      lessons = arr;
+    }
+    if (!Array.isArray(lessons)) return failedRes(res, 400, new Error(`Can't parse body`));
 
     const course = await Course.findById(course_id).exec();
     if (!course) throw new Error(`Can NOT find a Course with ID-${course_id}`);
@@ -139,7 +146,21 @@ exports.deleteLesson = async (req, res) => {
 
 exports.actLesson = async (req, res) => {
   try {
-    let response;
+    const user = req.session;
+    const lesson_id = req.params.lesson_id;
+    const { comment } = req.body;
+
+    const doc = new Comment({
+      lesson_id,
+      user: {
+        _id: user._id,
+        name: `${user.first_name} ${user.last_name}`,
+        photo: user.photo,
+      },
+      text: comment,
+    });
+    await doc.save();
+    const response = await Lesson.findByIdAndUpdate(lesson_id, { $push: { comments: doc._id } }).exec();
 
     return successfulRes(res, 200, response);
   } catch (e) {
