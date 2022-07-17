@@ -61,8 +61,8 @@ courseSchema.virtual('quizzes', {
   localField: '_id',
   foreignField: 'course_id',
 });
-courseSchema.pre(['save', 'update', 'updateOne', 'updateMany', 'init'], { document: true, query: false }, function (next) {
-  if (this.price.usd > 0 && this.price.egp > 0) {
+courseSchema.pre(['save', 'update', 'updateOne', 'updateMany'], { document: true, query: false }, function (next) {
+  if (this.price.egp > 0) {
     this.membership = 'paid';
   }
   next();

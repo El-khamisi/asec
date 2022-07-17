@@ -1,4 +1,4 @@
-const ObjectId = require('mongoose').Schema.Types.ObjectId;
+const ObjectId = require('mongoose').Types.ObjectId;
 const Course = require('./course.model');
 const User = require('../user/user.model');
 const { successfulRes, failedRes } = require('../../utils/response');
@@ -58,7 +58,7 @@ exports.getCourse = async (req, res) => {
 
     if (response) {
       response._doc.lessons = response.lessons;
-      response._doc.lessons_count = response.lessons.length;
+      response._doc.lessons_count = response.lessons?.length;
       response._doc.instructor = response.instructor._id;
       response._doc.price_egp = response._doc.price.egp;
       delete response._doc.price;

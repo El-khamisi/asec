@@ -44,7 +44,16 @@ const userSchema = new mongoose.Schema(
       {
         spec_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Spec', required: true },
         courses: [mongoose.Schema.Types.ObjectId],
-        is_completed: Boolean,
+        is_completed: { type: Boolean, default: false },
+        total_mark: { type: Number, default: 0 },
+        subscription: {
+          _id: false,
+          type: { type: String, enum: Object.values(subscriptions), require: true },
+          expires_at: Date,
+        },
+        installment_months: { type: Number, default: 0 },
+        remaining_cost: Number,
+        payment_type: String,
       },
     ],
   },
@@ -64,12 +73,6 @@ userSchema.methods.generateToken = function (req, res) {
     { expiresIn: '7d' }
   );
 
-  // req.session.user = this;
-  // res.cookie('authorization', token, {
-  //   maxAge: 7 * 24 * 60 * 60 * 1000, //7 days OR ONE WEEK
-  //   sameSite: NODE_ENV == 'dev' ? false : 'none',
-  //   secure: NODE_ENV == 'dev' ? false : true,
-  // });
   return token;
 };
 

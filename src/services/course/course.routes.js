@@ -5,8 +5,8 @@ const { isInstructor } = require('../../middlewares/authZ');
 const { getCourses, getCourse, getCourseDetails, addCourse, updateCourse, deleteCourse } = require('./course.controllers');
 
 router.get('/courses', getCourses);
-router.get('/course/:id', getCourse);
-router.get('/course/details/:id', getCourseDetails);
+router.get('/courses/:id', getCourse);
+router.get('/courses/details/:id', getCourseDetails);
 
 //Courses
 router.post('/courses', authN, isInstructor, addCourse);

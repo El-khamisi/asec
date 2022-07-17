@@ -3,7 +3,7 @@ const { logUser, regUser, logout, resetPassword, reverifyEmail } = require('./lo
 const { authN } = require('../../middlewares/authN');
 const { emailVerification } = require('./email-verification.controller');
 
-router.get('/login', logUser);
+router.post('/login', logUser);
 router.post('/signup', regUser);
 router.post('/logout', logout);
 router.put('/reset-password', authN, resetPassword);

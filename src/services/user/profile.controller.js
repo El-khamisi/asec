@@ -79,10 +79,10 @@ exports.enrollCourse = async (req, res) => {
   try {
     const course_id = req.params.course_id;
     const user = req.session.user;
-
+    
+    let error;
     for (const e of user.courses) {
       if (e.course_id == course_id) {
-        let error;
         if (e.is_completed) {
           error = new Error('Your have already completed to this course');
         }

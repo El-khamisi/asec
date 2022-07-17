@@ -2,10 +2,10 @@ const mongoose = require('mongoose');
 
 const commentSchema = new mongoose.Schema(
   {
-    lesson_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Lesson' },
+    parent_id: { type: mongoose.Schema.Types.ObjectId },
     user: {
       _id: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-      name: { type: String, trim, required: true },
+      name: { type: String, trim: true, required: true },
       photo: { type: String },
     },
     text: { type: String, required: true },

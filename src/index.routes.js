@@ -10,8 +10,12 @@ const { TOKENKEY, DBURI, DBURI_remote, NODE_ENV } = require('./config/env');
 const login = require('./services/login/login.routes');
 const dashboard = require('./services/dashboard/index.routes');
 const course = require('./services/course/course.routes');
+const lessons = require('./services/lesson/lesson.routes');
 const review = require('./services/review/review.routes');
 const contact = require('./services/utils/contactUs.routes');
+
+//Utilities Routes
+const metadata = require('./services/utils/metadata.routes');
 
 module.exports = async (app) => {
   app.use(cookieParser());
@@ -89,6 +93,10 @@ module.exports = async (app) => {
   app.use(login);
   app.use(dashboard);
   app.use(course);
+  app.use(lessons);
   app.use(review);
   app.use(contact);
+
+  //Utilities Routes
+  app.use(metadata);
 };
