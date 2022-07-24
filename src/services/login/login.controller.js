@@ -13,13 +13,13 @@ const { smtpMail } = require('../../utils/smtp');
 let googleOauth2Client;
 exports.regUser = async (req, res) => {
   try {
-    let { first_name, last_name, email, password } = req.body;
+    let { first_name, last_name, email, password, phone } = req.body;
     if (email && password) {
       password = bcrypt.hashSync(password, 10);
     } else {
       throw new Error('Email and password are REQUIRED');
     }
-    let saved = new User({ first_name, last_name, email, password });
+    let saved = new User({ first_name, last_name, email, password, phone });
     await saved.save();
 
     const token = saved.generateToken(req, res);
