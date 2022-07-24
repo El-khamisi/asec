@@ -64,10 +64,12 @@ userSchema.methods.generateToken = function (req, res) {
   const token = jwt.sign(
     {
       id: this._id,
-      name: this.first_name + ' ' + this.last_name,
+      first_name: this.first_name,
+      last_name: this.last_name,
       email: this.email,
       photo: this.photo,
       role: this.role,
+      isVerified: this.isVerified
     },
     TOKENKEY,
     { expiresIn: '7d' }
