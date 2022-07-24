@@ -68,6 +68,7 @@ userSchema.methods.generateToken = function (req, res) {
       last_name: this.last_name,
       email: this.email,
       photo: this.photo,
+      phone: this.phone,
       role: this.role,
       isVerified: this.isVerified
     },
